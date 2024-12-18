@@ -6,7 +6,7 @@
     "start": "tsx src/server.ts",
     "build": "tsc",
     "heroku-prebuild": "echo 'Preparing the build environment...'",
-    "heroku-build": "npm build",
+    "heroku-build": "npm run build",
     "heroku-postbuild": "echo 'Build is complete!'"
   },
   "keywords": [],
