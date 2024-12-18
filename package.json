@@ -4,7 +4,10 @@
   "main": "index.js",
   "scripts": {
     "start": "tsx src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "heroku-prebuild": "echo 'Preparing the build environment...'",
+    "heroku-build": "npm run compile",
+    "heroku-postbuild": "echo 'Build is complete!'"
   },
   "keywords": [],
   "author": "",
