@@ -7,23 +7,35 @@ export interface UserSocket {
 }
 
 export class UsersSocketManager {
-  private usersWithSocketInfo: Array<UserSocket>;
+  private usersWithSocketInfo: Map<string, UserSocket>;
   private socketIdsQueue: Array<Socket["id"]>;
   private roomManger: RoooManger;
 
   constructor() {
-    this.usersWithSocketInfo = [];
+    this.usersWithSocketInfo = new Map();
     this.socketIdsQueue = [];
     this.roomManger = new RoooManger();
   }
 
-  registerUserAndSocket(name: string, socket: Socket) {
-    this.usersWithSocketInfo.push({
+  registerUserAndSocket({
+    name,
+    socket,
+    sessionId,
+  }: {
+    name: string;
+    socket: Socket;
+    sessionId: string;
+  }) {
+    console.log("this.usersWithSocketInfo", this.usersWithSocketInfo);
+    console.log("this.socketIdsQueue", this.socketIdsQueue);
+    this.usersWithSocketInfo.set(sessionId, {
       name,
       socket,
     });
 
-    this.socketIdsQueue.push(socket.id);
+    if (!this.socketIdsQueue.includes(sessionId)) {
+      this.socketIdsQueue.push(sessionId);
+    }
     this.matchUsersAndClearSocketIdsQueue();
     this.initSocketHandlers(socket);
   }
@@ -32,27 +44,27 @@ export class UsersSocketManager {
     // check if more one socket available
     // if available then create room for two sockets
     if (this.socketIdsQueue.length > 1) {
-      const firstSocketId = this.socketIdsQueue.pop();
-      const secondSocketId = this.socketIdsQueue.pop();
+      const firstSessionId = this.socketIdsQueue.pop();
+      const secondSessionId = this.socketIdsQueue.pop();
+      console.log({ firstSessionId });
+      console.log({ secondSessionId });
 
       // find users based on sockets id
-      const firstUser = this.usersWithSocketInfo.find(
-        (useWithSocket) => useWithSocket.socket.id === firstSocketId
-      );
-      const secondUser = this.usersWithSocketInfo.find(
-        (useWithSocket) => useWithSocket.socket.id === secondSocketId
-      );
+      if (firstSessionId && secondSessionId) {
+        const firstUser = this.usersWithSocketInfo.get(firstSessionId);
+        const secondUser = this.usersWithSocketInfo.get(secondSessionId);
 
-      // if both the users avaialbe then create room
-      if (firstUser && secondUser) {
-        // create room
-        this.roomManger.createRoomForSocketUsers(firstUser, secondUser);
+        // if both the users avaialbe then create room
+        if (firstUser && secondUser) {
+          // create room
+          this.roomManger.createRoomForSocketUsers(firstUser, secondUser);
+        }
+
+        console.log("clear queues");
+
+        // matchUsersAndClearSocketIdsQueue again till queue is empty
+        this.matchUsersAndClearSocketIdsQueue();
       }
-
-      console.log("clear queues");
-
-      // matchUsersAndClearSocketIdsQueue again till queue is empty
-      this.matchUsersAndClearSocketIdsQueue();
     }
   }
 
@@ -87,10 +99,8 @@ export class UsersSocketManager {
     );
   }
 
-  removeUser(socketId: string) {
-    this.usersWithSocketInfo = this.usersWithSocketInfo.filter(
-      (x) => x.socket.id !== socketId
-    );
-    this.socketIdsQueue = this.socketIdsQueue.filter((x) => x === socketId);
+  removeUser(sessionId: string) {
+    this.usersWithSocketInfo.delete(sessionId);
+    this.socketIdsQueue = this.socketIdsQueue.filter((x) => x === sessionId);
   }
 }

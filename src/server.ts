@@ -31,10 +31,11 @@ httpServer.listen(port, () => {
 });
 
 io.on("connection", (socket) => {
-  console.log("a user connected", socket.id);
-  usersSocketManger.registerUserAndSocket("abc", socket);
+  console.log("a user connected", socket.handshake.auth);
+  const sessionId = socket.handshake.auth.sessionId;
+  usersSocketManger.registerUserAndSocket({ name: "abc", socket, sessionId });
   socket.on("disconnect", () => {
     console.log("user disconnected");
-    usersSocketManger.removeUser(socket.id);
+    usersSocketManger.removeUser(sessionId);
   });
 });
