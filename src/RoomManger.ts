@@ -91,7 +91,7 @@ export class RoooManger {
   }) {
     const room = this.rooms.get(`${roomId}`);
 
-    console.log("ice candidate room", room, [...this.rooms.keys()]);
+    // console.log("ice candidate room", room, [...this.rooms.keys()]);
 
     if (!room) {
       return;
@@ -103,7 +103,7 @@ export class RoooManger {
           ? room?.secondUser
           : room?.firstUser;
 
-      console.log("ice candidate room", roomId, receivingUser);
+      // console.log("ice candidate room", roomId, receivingUser);
       receivingUser.socket.emit("add-ice-candidate", {
         candidate,
         type,

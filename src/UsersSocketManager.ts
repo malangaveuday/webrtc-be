@@ -26,8 +26,12 @@ export class UsersSocketManager {
     socket: Socket;
     sessionId: string;
   }) {
-    console.log("this.usersWithSocketInfo", this.usersWithSocketInfo);
-    console.log("this.socketIdsQueue", this.socketIdsQueue);
+    console.log(
+      "registerUserAndSocket before",
+      sessionId,
+      this.socketIdsQueue.length,
+      this.usersWithSocketInfo.size
+    );
     this.usersWithSocketInfo.set(sessionId, {
       name,
       socket,
@@ -36,6 +40,13 @@ export class UsersSocketManager {
     if (!this.socketIdsQueue.includes(sessionId)) {
       this.socketIdsQueue.push(sessionId);
     }
+
+    console.log(
+      "registerUserAndSocket after",
+      sessionId,
+      this.socketIdsQueue.length,
+      this.usersWithSocketInfo.size
+    );
     this.matchUsersAndClearSocketIdsQueue();
     this.initSocketHandlers(socket);
   }
@@ -46,8 +57,8 @@ export class UsersSocketManager {
     if (this.socketIdsQueue.length > 1) {
       const firstSessionId = this.socketIdsQueue.pop();
       const secondSessionId = this.socketIdsQueue.pop();
-      console.log({ firstSessionId });
-      console.log({ secondSessionId });
+      // console.log({ firstSessionId });
+      // console.log({ secondSessionId });
 
       // find users based on sockets id
       if (firstSessionId && secondSessionId) {
@@ -60,7 +71,7 @@ export class UsersSocketManager {
           this.roomManger.createRoomForSocketUsers(firstUser, secondUser);
         }
 
-        console.log("clear queues");
+        console.log("clear queues", this.socketIdsQueue);
 
         // matchUsersAndClearSocketIdsQueue again till queue is empty
         this.matchUsersAndClearSocketIdsQueue();
@@ -70,13 +81,13 @@ export class UsersSocketManager {
 
   initSocketHandlers(socket: Socket) {
     socket.on("offer", ({ sdp, roomId }: { sdp: string; roomId: string }) => {
-      console.log("offer form", socket.id);
+      // console.log("offer form", socket.id);
       // on socket request
       this.roomManger.onOfferReceived({ sdp, roomId, socket });
     });
 
     socket.on("answer", ({ sdp, roomId }: { sdp: string; roomId: string }) => {
-      console.log("answer", socket.id);
+      // console.log("answer", socket.id);
       // on socket request
       this.roomManger.onOfferAckReceived({ sdp, roomId, socket });
     });
@@ -92,7 +103,7 @@ export class UsersSocketManager {
         candidate: any;
         type: "sender" | "receiver";
       }) => {
-        console.log("add-ice-candidate", socket.id, roomId);
+        // console.log("add-ice-candidate", socket.id, roomId);
         // on socket request
         this.roomManger.onIceCandidates({ roomId, socket, candidate, type });
       }
@@ -100,7 +111,10 @@ export class UsersSocketManager {
   }
 
   removeUser(sessionId: string) {
-    this.usersWithSocketInfo.delete(sessionId);
-    this.socketIdsQueue = this.socketIdsQueue.filter((x) => x === sessionId);
+    console.log("remove users before", this.usersWithSocketInfo);
+    if (this.usersWithSocketInfo.size > 1) {
+      this.usersWithSocketInfo.delete(sessionId);
+      console.log("remove users after", this.usersWithSocketInfo);
+    }
   }
 }
